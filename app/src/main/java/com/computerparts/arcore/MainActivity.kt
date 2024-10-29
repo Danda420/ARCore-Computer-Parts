@@ -7,6 +7,7 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
+import com.google.ar.core.Config
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArModelNode
 import io.github.sceneview.ar.node.PlacementMode
@@ -15,8 +16,10 @@ import io.github.sceneview.math.Position
 class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
     private lateinit var sceneView: ArSceneView
-    private lateinit var placeButton: Button
+    private lateinit var selectButton: Button
+    private lateinit var delButton: Button
     private lateinit var modelDropdown: Spinner
+    private val placedModels = mutableListOf<ArModelNode>()
     private var selectedModelPath: String = "pc_case.glb" // Default model path
 
     private val models = mapOf(
@@ -35,11 +38,13 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
         sceneView = findViewById(R.id.sceneView)
 
         sceneView = findViewById<ArSceneView?>(R.id.sceneView).apply {
-            this.lightEstimationMode = io.github.sceneview.ar.arcore.LightEstimationMode.DISABLED
+            this.lightEstimationMode = Config.LightEstimationMode.ENVIRONMENTAL_HDR
         }
 
         modelDropdown = findViewById(R.id.modelDropdown)
-        placeButton = findViewById(R.id.place)
+        selectButton = findViewById(R.id.select)
+        delButton = findViewById(R.id.delmodels)
+
 
         val modelList = models.keys.toList()
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, modelList)
@@ -47,8 +52,14 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
         modelDropdown.adapter = adapter
         modelDropdown.onItemSelectedListener = this  // Set the listener here
 
-        placeButton.setOnClickListener {
+        selectButton.setOnClickListener {
             placeModel()
+        }
+        delButton.setOnClickListener {
+            placedModels.forEach { modelNode ->
+                modelNode.destroy()  // Destroy the model node
+            }
+            placedModels.clear()
         }
     }
 
@@ -62,19 +73,27 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
     private fun placeModel() {
         // Create a new model node each time to allow multiple placements
-        val newModelNode = ArModelNode(placementMode = PlacementMode.INSTANT).apply {
+        val newModelNode = ArModelNode(sceneView.engine,PlacementMode.INSTANT).apply {
+            // Load the model asynchronously
             loadModelGlbAsync(
                 glbFileLocation = selectedModelPath,
                 scaleToUnits = 1f,
                 centerOrigin = Position(-0.5f)
-            ) {
-                sceneView.planeRenderer.isVisible = true
+            ) { error ->
+                if (error != null) {
+                    // Handle loading error if needed
+                } else {
+                    // Successfully loaded, anchor the model
+                    anchor()
+                }
             }
         }
 
+        // Add the model node to the scene
         sceneView.addChild(newModelNode)
-        newModelNode.anchor()
+        placedModels.add(newModelNode)
     }
+
 
     override fun onDestroy() {
         super.onDestroy()

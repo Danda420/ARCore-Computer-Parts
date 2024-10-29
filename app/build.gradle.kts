@@ -70,5 +70,5 @@ dependencies {
     implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
 
-    implementation("io.github.sceneview:arsceneview:0.9.8")
+    implementation("io.github.sceneview:arsceneview:0.10.2")
 }
