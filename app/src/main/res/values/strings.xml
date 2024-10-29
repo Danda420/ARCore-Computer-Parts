@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">ARCore Computer Parts</string>
+    <string-array name="model_options">
+        <item>Case</item>
+        <item>Motherboard</item>
+        <item>PSU</item>
+        <item>GPU</item>
+        <item>Monitor</item>
+        <item>Fan</item>
+    </string-array>
+</resources>
